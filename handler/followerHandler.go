@@ -7,6 +7,7 @@ import (
 
 	"follower.xws.com/model"
 	"follower.xws.com/repo"
+	"github.com/gorilla/mux"
 )
 
 type KeyProduct struct{}
@@ -36,26 +37,18 @@ func (f *FollowersHandler) CreateUser(rw http.ResponseWriter, h *http.Request) {
 	}
 }
 
-/*func (f *FollowersHandler) CreateFollowing(rw http.ResponseWriter, h *http.Request) {
-	newFollowing := h.Context().Value(KeyProduct{}).(*model.NewFollowing)
-	user := model.User{}
-	userToFollow := model.User{}
-	user.UserId = newFollowing.UserId
-	user.Username = newFollowing.Username
-	user.ProfileImage = newFollowing.ProfileImage
-	userToFollow.UserId = newFollowing.FollowingUserId
-	userToFollow.Username = newFollowing.FollowingUsername
-	userToFollow.ProfileImage = newFollowing.FollowingProfileImage
-	err := f.repo.SaveFollowing(&user, &userToFollow)
+func (f *FollowersHandler) UnfollowUser(rw http.ResponseWriter, h *http.Request) {
+	userId1 := h.URL.Query().Get("followerId")
+	userId2 := h.URL.Query().Get("followedId")
+	err := f.repo.DeleteFollowing(userId1, userId2)
 	if err != nil {
 		f.logger.Print("Database exception: ", err)
-		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	user = model.User{}
+	user := model.User{}
 	jsonData, _ := json.Marshal(user)
 	rw.Write(jsonData)
-}*/
+}
 
 func (f *FollowersHandler) CreateFollowing(rw http.ResponseWriter, h *http.Request) {
 	// Parse the request body
@@ -98,18 +91,7 @@ func (f *FollowersHandler) CreateFollowing(rw http.ResponseWriter, h *http.Reque
 	// Continue with your logic...
 }
 
-/*func (f *FollowersHandler) UnfollowUser(rw http.ResponseWriter, h *http.Request) {
-	unfollowUser := h.Context().Value(KeyProduct{}).(*model.UnfollowUser)
-	err := f.repo.DeleteFollowing(unfollowUser.UserId, unfollowUser.UserToUnfollowId)
-	if err != nil {
-		f.logger.Print("Database exception: ", err)
-		return
-	}
-	user := model.User{}
-	jsonData, _ := json.Marshal(user)
-	rw.Write(jsonData)
-}
-
+/*
 func (f *FollowersHandler) GetUser(rw http.ResponseWriter, h *http.Request) {
 	vars := mux.Vars(h)
 	id := vars["userId"]
@@ -125,6 +107,7 @@ func (f *FollowersHandler) GetUser(rw http.ResponseWriter, h *http.Request) {
 		return
 	}
 }
+*/
 
 func (f *FollowersHandler) GetFollowingsForUser(rw http.ResponseWriter, h *http.Request) {
 	vars := mux.Vars(h)
@@ -168,61 +151,6 @@ func (f *FollowersHandler) GetFollowersForUser(rw http.ResponseWriter, h *http.R
 	}
 }
 
-func (f *FollowersHandler) MiddlewareContentTypeSet(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, h *http.Request) {
-		f.logger.Println("Method [", h.Method, "] - Hit path :", h.URL.Path)
-
-		rw.Header().Add("Content-Type", "application/json")
-
-		next.ServeHTTP(rw, h)
-	})
-}
-
-func (f *FollowersHandler) MiddlewarePersonDeserialization(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, h *http.Request) {
-		user := &model.User{}
-		err := user.FromJSON(h.Body)
-		if err != nil {
-			http.Error(rw, "Unable to decode json", http.StatusBadRequest)
-			f.logger.Fatal(err)
-			return
-		}
-		ctx := context.WithValue(h.Context(), KeyProduct{}, user)
-		h = h.WithContext(ctx)
-		next.ServeHTTP(rw, h)
-	})
-}
-
-func (f *FollowersHandler) MiddlewareNewFollowingDeserialization(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, h *http.Request) {
-		newFollowing := &model.NewFollowing{}
-		err := newFollowing.FromJSON(h.Body)
-		if err != nil {
-			http.Error(rw, "Unable to decode json", http.StatusBadRequest)
-			f.logger.Fatal(err)
-			return
-		}
-		ctx := context.WithValue(h.Context(), KeyProduct{}, newFollowing)
-		h = h.WithContext(ctx)
-		next.ServeHTTP(rw, h)
-	})
-}
-
-func (f *FollowersHandler) MiddlewareUnfollowUserDeserialization(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, h *http.Request) {
-		unfollowUser := &model.UnfollowUser{}
-		err := unfollowUser.FromJSON(h.Body)
-		if err != nil {
-			http.Error(rw, "Unable to decode json", http.StatusBadRequest)
-			f.logger.Fatal(err)
-			return
-		}
-		ctx := context.WithValue(h.Context(), KeyProduct{}, unfollowUser)
-		h = h.WithContext(ctx)
-		next.ServeHTTP(rw, h)
-	})
-}
-
 func (f *FollowersHandler) GetRecommendationsForUser(rw http.ResponseWriter, h *http.Request) {
 	vars := mux.Vars(h)
 	id := vars["userId"]
@@ -242,4 +170,4 @@ func (f *FollowersHandler) GetRecommendationsForUser(rw http.ResponseWriter, h *
 		f.logger.Fatal("Unable to convert to json :", err)
 		return
 	}
-}*/
+}

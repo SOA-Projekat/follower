@@ -41,6 +41,14 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/createFollower", FollowersHandler.CreateFollowing).Methods("POST")
 
+	router.HandleFunc("/removeFollower", FollowersHandler.UnfollowUser).Methods("DELETE")
+
+	router.HandleFunc("/getFollowings/{userId}", FollowersHandler.GetFollowingsForUser).Methods("GET")
+
+	router.HandleFunc("/getFollowers/{userId}", FollowersHandler.GetFollowersForUser).Methods("GET")
+
+	router.HandleFunc("/getRecommended/{userId}", FollowersHandler.GetRecommendationsForUser).Methods("GET")
+
 	permittedHeaders := handlers.AllowedHeaders([]string{"Requested-With", "Content-Type", "Authorization"})
 	permittedOrigins := handlers.AllowedOrigins([]string{"*"})
 	permittedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
